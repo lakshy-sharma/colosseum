@@ -1,0 +1,20 @@
+# Set the settings for the competition you want to play.
+# Ignore other settings they will be ignored by game controller.
+
+prisoners_dilemma:
+  format: singleroundrobin
+  min_iterations: 100
+  max_iterations: 10000
+  survival_threshold: 0.4
+  valid_moves:
+    - cooperate
+    - defect
+  payoff_matrix: 
+    win: 3
+    mutual_cooperation: 2
+    mutual_defection: 1
+    loss: 0
+  players:
+    - tit_for_tat
+    - jesus
+    - joker
