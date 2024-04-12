@@ -5,11 +5,8 @@ prisoners_dilemma:
   fixture_settings:
     format: roundrobin
     rounds: 5
-    min_iterations: 200
-    max_iterations: 1000
-  valid_moves:
-    - cooperate
-    - defect
+    min_iterations: 300
+    max_iterations: 700
   payoff_matrix: 
     win: 3
     mutual_cooperation: 2
@@ -20,3 +17,6 @@ prisoners_dilemma:
     - jesus
     - joker
     - judas
+    - lucifer
+    - grudger
+    - worse_and_worse

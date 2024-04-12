@@ -13,12 +13,22 @@ class PrisonersDilemmaGameController:
 
         # This list records all the moves made the players upto this point.
         # It will be passed alongwith payoff matrix on each turn to players.
-        self.game_state = []
+        self.game_history = []
+        self.global_history = []
         self.payoff_matrix = self.configurations[self.game_type]["payoff_matrix"]
 
         # Register players on the scoreboard.
         self.scoreboard = {}
         self.reset_scoreboard()
+
+    def flush_game_history(self) -> None:
+        """
+        This function transfers clears the game history.
+
+        Returns:
+            None
+        """
+        self.game_history = []
 
     def reset_scoreboard(self) -> None:
         """
@@ -70,24 +80,22 @@ class PrisonersDilemmaGameController:
 
         return fixtures
 
-    def score_results(self, player_moves: dict) -> None:
+    def score_moves(self, moves_data: dict) -> None:
         """
         This function maps the results into the scoreboard.
 
         Args:
-            player_moves (dict): This is a dictionary based mapping of player moves.
+            moves_data (dict): This is a dictionary based mapping of player moves.
         Returns:
-            None
+            None (We update the scores into the scoreboard of class object itself)
         """
+        # Register each player's move in the list
         moves = []
         players = []
-
-        # Register each player's move in the list
-        for player in player_moves:
-            self.game_state.append(player_moves)
+        for player in moves_data:
             players.append(player)
-            moves.append(player_moves[player])
-
+            moves.append(moves_data[player])
+        # Award points
         if (moves[0] == "cooperate") and (moves[1] == "cooperate"):
             self.scoreboard[players[0]] += 2
             self.scoreboard[players[1]] += 2
@@ -111,7 +119,6 @@ class PrisonersDilemmaGameController:
         Returns:
             dict: A dictionary containing the final scoreboard of the game.
         """
-
         player_modules = self.register_player_modules()
         fixtures = self.generate_fixtures()
         game_iterations = random.randrange(
@@ -131,26 +138,65 @@ class PrisonersDilemmaGameController:
             fig, ax = plt.subplots()
             artists = []
 
-            # Start the fixture games for this round.
+            # Start the fixtures for this round.
             for fixture in fixtures:
                 print(
                     f"Round Id: {round}, Fixture Id: {fixture}, Players: {fixtures[fixture]}, Iterations: {game_iterations}"
                 )
-                # Perform the itertaions for this fixture.
-                for i in range(game_iterations):
-                    player_moves = {}
-                    for player in fixtures[fixture]:
-                        player_controller = player_modules[player].PlayerController(
-                            valid_moves=self.configurations[self.game_type][
-                                "valid_moves"
-                            ],
-                            payoff_matrix=self.payoff_matrix,
-                            game_state=self.game_state,
-                            scoreboard=self.scoreboard,
-                        )
-                        player_moves[player] = player_controller.make_move()
-                    self.score_results(player_moves)
 
+                # Before starting the game we clear the game history.
+                self.flush_game_history()
+                # Setup the players for this fixture.
+                player1_controller = player_modules[
+                    fixtures[fixture][0]
+                ].PlayerController(
+                    opponent_name=fixtures[fixture][1],
+                    payoff_matrix=self.payoff_matrix,
+                    game_history=self.game_history,
+                    global_history=self.global_history,
+                    scoreboard=self.scoreboard,
+                )
+                player2_controller = player_modules[
+                    fixtures[fixture][1]
+                ].PlayerController(
+                    opponent_name=fixtures[fixture][0],
+                    payoff_matrix=self.payoff_matrix,
+                    game_history=self.game_history,
+                    global_history=self.global_history,
+                    scoreboard=self.scoreboard,
+                )
+
+                # Perform the game iterations for this fixture.
+                for i in range(game_iterations):
+                    player1_move = player1_controller.make_move()
+                    player2_move = player2_controller.make_move()
+
+                    # Award points based on moves.
+                    self.score_moves(
+                        moves_data={
+                            player1_controller.name: player1_move,
+                            player2_controller.name: player2_move,
+                        }
+                    )
+
+                    # Append the moves into history.
+                    self.game_history.append(
+                        {
+                            player1_controller.name: player1_move,
+                            player2_controller.name: player2_move,
+                        }
+                    )
+                    # #
+                    # self.global_history.append(
+                    #     {
+                    #         "round": round,
+                    #         "fixture": fixture,
+                    #         "moves": [{
+                    #             player1_controller.name: player1_move,
+                    #             player2_controller.name: player2_move,
+                    #         }],
+                    #     }
+                    # )
                     # Plot the scores on the map.
                     colors = ["tab:blue", "tab:red", "tab:green", "tab:purple"]
                     container = ax.barh(

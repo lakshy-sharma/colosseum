@@ -5,15 +5,17 @@ class PlayerController:
 
     def __init__(
         self,
+        opponent_name: str,
         payoff_matrix: dict,
-        game_state: list,
-        valid_moves: list,
+        game_history: list,
+        global_history: list,
         scoreboard: dict,
     ):
-        self.player_name = "jesus"
-        self.valid_moves = valid_moves
+        self.name = "jesus"
+        self.opponent = opponent_name
         self.payoff_matrix = payoff_matrix
-        self.game_state = game_state
+        self.game_history = game_history
+        self.global_history = global_history
         self.scoreboard = scoreboard
 
     def make_move(self) -> str:

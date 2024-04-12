@@ -1,0 +1,9 @@
+version: 3
+
+services:
+  colosseum:
+    image: sharmalakshy/colosseum
+    build: .
+    command: prisoners_dilemma
+    volumes:
+      - ./visuals:/app/visuals
