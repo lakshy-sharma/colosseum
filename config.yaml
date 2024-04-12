@@ -2,10 +2,11 @@
 # Ignore other settings they will be ignored by game controller.
 
 prisoners_dilemma:
-  format: singleroundrobin
-  min_iterations: 100
-  max_iterations: 10000
-  survival_threshold: 0.4
+  fixture_settings:
+    format: roundrobin
+    rounds: 5
+    min_iterations: 200
+    max_iterations: 1000
   valid_moves:
     - cooperate
     - defect
@@ -18,3 +19,4 @@ prisoners_dilemma:
     - tit_for_tat
     - jesus
     - joker
+    - judas

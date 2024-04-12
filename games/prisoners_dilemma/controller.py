@@ -1,6 +1,7 @@
 import importlib
+import matplotlib.pyplot as plt
+import matplotlib.animation as aniplt
 import random
-import time
 from .utils.fixtures_generators import roundrobin
 
 
@@ -17,12 +18,24 @@ class PrisonersDilemmaGameController:
 
         # Register players on the scoreboard.
         self.scoreboard = {}
+        self.reset_scoreboard()
+
+    def reset_scoreboard(self) -> None:
+        """
+        This function resets the scoreboard.
+
+        Returns:
+            None
+        """
         for player in self.configurations[self.game_type]["players"]:
             self.scoreboard[player] = 0
 
-    def register_players(self) -> dict:
+    def register_player_modules(self) -> dict:
         """
         This function loads the players and passes them back into the main program loop.
+
+        Returns:
+            dict: A dictionary containing the player modules mapped to their names.
         """
         # Initiate the modules for each player.
         player_modules = {}
@@ -36,24 +49,36 @@ class PrisonersDilemmaGameController:
     def generate_fixtures(self) -> dict:
         """
         This function creates the fixtures for the matches to be played between the players.
+
+        Returns:
+            dict: A dictionary which contains all the fixtures for a game.
         """
         fixtures = {}
 
         # Create fixtures.
-        if "roundrobin" in self.configurations[self.game_type]["format"]:
+        if (
+            "roundrobin"
+            in self.configurations[self.game_type]["fixture_settings"]["format"]
+        ):
             fixtures = roundrobin(
-                players=self.configurations[self.game_type]["players"],
-                format=self.configurations[self.game_type]["format"],
+                players=self.configurations[self.game_type]["players"]
             )
         else:
             fixtures = roundrobin(
-                players=self.configurations[self.game_type]["players"],
-                format=self.configurations[self.game_type]["format"],
+                players=self.configurations[self.game_type]["players"]
             )
 
         return fixtures
 
     def score_results(self, player_moves: dict) -> None:
+        """
+        This function maps the results into the scoreboard.
+
+        Args:
+            player_moves (dict): This is a dictionary based mapping of player moves.
+        Returns:
+            None
+        """
         moves = []
         players = []
 
@@ -82,34 +107,66 @@ class PrisonersDilemmaGameController:
         """
         1. Start game iterations.
         2. Collect the result in a seperate dictionary and return to the main caller.
+
+        Returns:
+            dict: A dictionary containing the final scoreboard of the game.
         """
 
-        player_modules = self.register_players()
+        player_modules = self.register_player_modules()
         fixtures = self.generate_fixtures()
         game_iterations = random.randrange(
-            start=self.configurations[self.game_type]["min_iterations"],
-            stop=self.configurations[self.game_type]["max_iterations"],
+            start=self.configurations[self.game_type]["fixture_settings"][
+                "min_iterations"
+            ],
+            stop=self.configurations[self.game_type]["fixture_settings"][
+                "max_iterations"
+            ],
             step=1,
         )
 
-        # Start the game.
-        for fixture in fixtures:
-            print(
-                f"Game Fixture Id: {fixture}. Players: {fixtures[fixture]}. Iterations: {game_iterations}"
-            )
-            for i in range(game_iterations):
-                # Pass the payoff matrix and the game state to each player.
-                # Fetch their responses and award points based on their moves.
-                player_moves = {}
-                for player in fixtures[fixture]:
-                    player_controller = player_modules[player].PlayerController(
-                        valid_moves=self.configurations[self.game_type]["valid_moves"],
-                        payoff_matrix=self.payoff_matrix,
-                        game_state=self.game_state,
-                    )
-                    player_moves[player] = player_controller.make_move()
+        for round in range(
+            self.configurations[self.game_type]["fixture_settings"]["rounds"]
+        ):
+            # Create a new visualization for this round and start the animation.
+            fig, ax = plt.subplots()
+            artists = []
 
-                self.score_results(player_moves)
-                time.sleep(0.001)
+            # Start the fixture games for this round.
+            for fixture in fixtures:
+                print(
+                    f"Round Id: {round}, Fixture Id: {fixture}, Players: {fixtures[fixture]}, Iterations: {game_iterations}"
+                )
+                # Perform the itertaions for this fixture.
+                for i in range(game_iterations):
+                    player_moves = {}
+                    for player in fixtures[fixture]:
+                        player_controller = player_modules[player].PlayerController(
+                            valid_moves=self.configurations[self.game_type][
+                                "valid_moves"
+                            ],
+                            payoff_matrix=self.payoff_matrix,
+                            game_state=self.game_state,
+                            scoreboard=self.scoreboard,
+                        )
+                        player_moves[player] = player_controller.make_move()
+                    self.score_results(player_moves)
+
+                    # Plot the scores on the map.
+                    colors = ["tab:blue", "tab:red", "tab:green", "tab:purple"]
+                    container = ax.barh(
+                        list(self.scoreboard.keys()),
+                        list(self.scoreboard.values()),
+                        color=colors,
+                    )
+                    artists.append(container)
+
+            # Finalize the plot and save it.
+            ani = aniplt.ArtistAnimation(fig=fig, artists=artists, interval=10)
+            ani.save(
+                f"./visuals/{self.game_type}/round{round}.gif",
+                writer="pillow",
+            )
+            # After each round reset the scoreboard.
+            self.reset_scoreboard()
 
         return self.scoreboard
