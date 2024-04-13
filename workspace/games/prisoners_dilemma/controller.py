@@ -6,6 +6,10 @@ from .utils.fixtures_generators import roundrobin
 
 
 class PrisonersDilemmaGameController:
+    """
+    This game controller is used for controlling the game.
+    Currently the implementation is single threaded but the plan is to convert it into a multithreaded where each round is run inside its own thread.
+    """
 
     def __init__(self, configurations) -> None:
         self.game_type = "prisoners_dilemma"
@@ -136,6 +140,11 @@ class PrisonersDilemmaGameController:
         ):
             # Create a new visualization for this round and start the animation.
             fig, ax = plt.subplots()
+            fig.set_figheight(10)
+            fig.set_figwidth(15)
+            ax.set_title("Prisoners Dilemma Tournament")
+            ax.set_xlabel("Points")
+            ax.set_ylabel("Players")
             artists = []
 
             # Start the fixtures for this round.
@@ -144,8 +153,6 @@ class PrisonersDilemmaGameController:
                     f"Round Id: {round}, Fixture Id: {fixture}, Players: {fixtures[fixture]}, Iterations: {game_iterations}"
                 )
 
-                # Before starting the game we clear the game history.
-                self.flush_game_history()
                 # Setup the players for this fixture.
                 player1_controller = player_modules[
                     fixtures[fixture][0]
@@ -186,7 +193,6 @@ class PrisonersDilemmaGameController:
                             player2_controller.name: player2_move,
                         }
                     )
-                    # #
                     # self.global_history.append(
                     #     {
                     #         "round": round,
@@ -206,13 +212,21 @@ class PrisonersDilemmaGameController:
                     )
                     artists.append(container)
 
-            # Finalize the plot and save it.
-            ani = aniplt.ArtistAnimation(fig=fig, artists=artists, interval=10)
+                # Delete the player objects.
+                del player1_controller
+                del player2_controller
+                # Delete the game history.
+                self.flush_game_history()
+
+            # Save the plot for this round in a file.
+            ani = aniplt.ArtistAnimation(fig=fig, artists=artists, interval=1)
             ani.save(
-                f"./visuals/{self.game_type}/round{round}.gif",
-                writer="pillow",
+                f"./visuals/{self.game_type}/round{round}.mp4",
+                writer=aniplt.FFMpegWriter(),
+                progress_callback=lambda i, n: print(f"Frame {i}/{n}"),
             )
-            # After each round reset the scoreboard.
+
+            # Reset the scoreboard for next round.
             self.reset_scoreboard()
 
         return self.scoreboard

@@ -5,8 +5,8 @@ prisoners_dilemma:
   fixture_settings:
     format: roundrobin
     rounds: 5
-    min_iterations: 300
-    max_iterations: 700
+    min_iterations: 200
+    max_iterations: 500
   payoff_matrix: 
     win: 3
     mutual_cooperation: 2
