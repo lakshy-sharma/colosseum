@@ -1,8 +1,10 @@
 import importlib
+from multiprocessing import process
 import matplotlib.pyplot as plt
 import matplotlib.animation as aniplt
 import random
 from .utils.fixtures_generators import roundrobin
+import multiprocessing
 
 
 class PrisonersDilemmaGameController:
@@ -115,7 +117,24 @@ class PrisonersDilemmaGameController:
 
         return None
 
-    def start(self) -> dict:
+    def export_graph(self, animation_data: aniplt.ArtistAnimation, round: int) -> None:
+        """
+        This function saves the data into a file by using the ffmpeg library.
+        It has been seperated from complete program so that we can call it using the process library and make the operation fast.
+
+        Args:
+            animation_data (ArtistAnimation): A matplotlib based artist animation.
+            round (int): An integer value depicting the current round for which we are saving the data.
+
+        Returns:
+            None (The operation writes data into a file.)
+        """
+        animation_data.save(
+            f"./visuals/{self.game_type}/round{round}.mp4",
+            writer=aniplt.FFMpegWriter(fps=25),
+        )
+
+    def start(self) -> None:
         """
         1. Start game iterations.
         2. Collect the result in a seperate dictionary and return to the main caller.
@@ -135,6 +154,7 @@ class PrisonersDilemmaGameController:
             step=1,
         )
 
+        process_store = {}
         for round in range(
             self.configurations[self.game_type]["fixture_settings"]["rounds"]
         ):
@@ -219,14 +239,18 @@ class PrisonersDilemmaGameController:
                 self.flush_game_history()
 
             # Save the plot for this round in a file.
+            # This must start as a new process and final program should wait until it quits.
             ani = aniplt.ArtistAnimation(fig=fig, artists=artists, interval=1)
-            ani.save(
-                f"./visuals/{self.game_type}/round{round}.mp4",
-                writer=aniplt.FFMpegWriter(),
-                progress_callback=lambda i, n: print(f"Frame {i}/{n}"),
+            process_store[round] = multiprocessing.Process(
+                target=self.export_graph, args=(ani, round)
             )
+            process_store[round].start()
 
             # Reset the scoreboard for next round.
             self.reset_scoreboard()
 
-        return self.scoreboard
+        print("Waiting for file writer processes to join back.")
+        for round in process_store:
+            process_store[round].join()
+
+        return None

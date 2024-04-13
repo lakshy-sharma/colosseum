@@ -9,12 +9,6 @@ class ColosseumController:
         self.game_type = game_type
         self.configurations = configurations
 
-    def process_results(self, results: dict) -> None:
-        """
-        This function collects the results and creates animations highlighting their strategies and payoffs.
-        """
-        print(f"Scoreboard: {results}")
-
     def start(self) -> None:
         """
         This function starts the game and passes the results to a function which can buffer the results as required.
@@ -24,11 +18,7 @@ class ColosseumController:
             game_controller = PrisonersDilemmaGameController(
                 configurations=self.configurations
             )
-            game_results = game_controller.start()
-
-            # Process the output and save the findings.
-            self.process_results(game_results)
-
+            game_controller.start()
         else:
             print("Game not supported.")
 
