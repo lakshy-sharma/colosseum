@@ -1,10 +1,10 @@
 import importlib
-from multiprocessing import process
 import matplotlib.pyplot as plt
 import matplotlib.animation as aniplt
 import random
-from .utils.fixtures_generators import roundrobin
+import json
 import multiprocessing
+from .utils.fixtures_generators import roundrobin
 
 
 class PrisonersDilemmaGameController:
@@ -86,36 +86,30 @@ class PrisonersDilemmaGameController:
 
         return fixtures
 
-    def score_moves(self, moves_data: dict) -> None:
+    def score_moves(self, player1_move: str, player2_move: str) -> tuple[int, int]:
         """
         This function maps the results into the scoreboard.
 
         Args:
-            moves_data (dict): This is a dictionary based mapping of player moves.
-        Returns:
-            None (We update the scores into the scoreboard of class object itself)
-        """
-        # Register each player's move in the list
-        moves = []
-        players = []
-        for player in moves_data:
-            players.append(player)
-            moves.append(moves_data[player])
-        # Award points
-        if (moves[0] == "cooperate") and (moves[1] == "cooperate"):
-            self.scoreboard[players[0]] += 2
-            self.scoreboard[players[1]] += 2
-        elif (moves[0] == "cooperate") and (moves[1] == "defect"):
-            self.scoreboard[players[0]] += 0
-            self.scoreboard[players[1]] += 3
-        elif (moves[0] == "defect") and (moves[1] == "cooperate"):
-            self.scoreboard[players[0]] += 3
-            self.scoreboard[players[1]] += 0
-        elif (moves[0] == "defect") and (moves[1] == "defect"):
-            self.scoreboard[players[0]] += 1
-            self.scoreboard[players[1]] += 1
+            player1_move (str): The move made by the first player.
+            player2_move (str): The move made by the second player.
 
-        return None
+        Returns:
+            tuple[int,int]: A tuple of strings containing the points to be awarded to each player.
+        """
+        if (player1_move == "cooperate") and (player2_move == "cooperate"):
+            return (2, 2)
+        elif (player1_move == "cooperate") and (player2_move == "defect"):
+            return (0, 3)
+        elif (player1_move == "defect") and (player2_move == "cooperate"):
+            return (3, 0)
+        elif (player1_move == "defect") and (player2_move == "defect"):
+            return (1, 1)
+        else:
+            print(
+                f"Invalid move by the players: Player1: {player1_move}, Player2: {player2_move}. Please fix this."
+            )
+            exit(0)
 
     def export_graph(self, animation_data: aniplt.ArtistAnimation, round: int) -> None:
         """
@@ -134,13 +128,95 @@ class PrisonersDilemmaGameController:
             writer=aniplt.FFMpegWriter(fps=25),
         )
 
+    def analyse_global_history(self) -> None:
+        """
+        This function analyzes the global history and generates pre-programmed graphical insights.
+        The function is isolated to ensure maximal parallelization and isolation from rest of program.
+
+        Args:
+            None
+        Returns:
+            None
+        """
+
+        # Plotting the progress of each player in a bar chart animation.
+        total_rounds = self.configurations[self.game_type]["fixture_settings"]["rounds"]
+        process_store = {}
+        for round in range(total_rounds):
+            figure, ax = plt.subplots()
+            figure.set_figheight(10)
+            figure.set_figwidth(15)
+            ax.set_title(f"Round: {round}")
+            ax.set_xlabel("Points")
+            ax.set_ylabel("Players")
+            artists = []
+
+            # Filter all fixtures for this round. from global history.
+
+            round_fixtures_list = [
+                d for d in self.global_history if d["round"] == round
+            ]
+            for fixtures_data in round_fixtures_list:
+                for move in fixtures_data["moves_data"]:
+                    players = list(move.keys())
+                    player_moves = list(move.values())
+
+                    # Get the scores for the above players.
+                    player1_score, player2_score = self.score_moves(
+                        player1_move=player_moves[0], player2_move=player_moves[0]
+                    )
+
+                    # We need to score each move in the moves data.
+                    container = ax.barh(
+                        list(self.scoreboard.keys()),
+                        list(self.scoreboard.values()),
+                    )
+                    artists.append(container)
+
+            ani = aniplt.ArtistAnimation(fig=figure, artists=artists, interval=1)
+            process_store[round] = multiprocessing.Process(
+                target=self.export_graph, args=(ani, round)
+            )
+            process_store[round].start()
+
+        print("Waiting for analysis plotters to join back.")
+        for round in process_store:
+            process_store[round].join()
+        return None
+
+    def update_global_history(
+        self, round_id: int, fixture_id: int, player1: str, player2: str
+    ) -> None:
+        """
+        Updates the global history with game history.
+
+        Args:
+            round_id (int): The round id for this entry.
+            fixture_id (int): The fixture if for this entry.
+            player1 (str): The player 1 of this fixture.
+            player2 (str): The player 2 of this fixture.
+        Returns:
+            None
+        """
+
+        self.global_history.append(
+            {
+                "round_id": round_id,
+                "fixture_id": fixture_id,
+                "player1": player1,
+                "player2": player2,
+                "moves_data": self.game_history,
+            }
+        )
+        return None
+
     def start(self) -> None:
         """
         1. Start game iterations.
         2. Collect the result in a seperate dictionary and return to the main caller.
 
         Returns:
-            dict: A dictionary containing the final scoreboard of the game.
+            None
         """
         player_modules = self.register_player_modules()
         fixtures = self.generate_fixtures()
@@ -199,12 +275,13 @@ class PrisonersDilemmaGameController:
                     player2_move = player2_controller.make_move()
 
                     # Award points based on moves.
-                    self.score_moves(
-                        moves_data={
-                            player1_controller.name: player1_move,
-                            player2_controller.name: player2_move,
-                        }
+                    player1_score, player2_score = self.score_moves(
+                        player1_move, player2_move
                     )
+
+                    # Update the scoreboard with new scores.
+                    self.scoreboard[player1_controller.name] += player1_score
+                    self.scoreboard[player2_controller.name] += player2_score
 
                     # Append the moves into history.
                     self.game_history.append(
@@ -213,24 +290,21 @@ class PrisonersDilemmaGameController:
                             player2_controller.name: player2_move,
                         }
                     )
-                    # self.global_history.append(
-                    #     {
-                    #         "round": round,
-                    #         "fixture": fixture,
-                    #         "moves": [{
-                    #             player1_controller.name: player1_move,
-                    #             player2_controller.name: player2_move,
-                    #         }],
-                    #     }
-                    # )
+
                     # Plot the scores on the map.
-                    colors = ["tab:blue", "tab:red", "tab:green", "tab:purple"]
                     container = ax.barh(
                         list(self.scoreboard.keys()),
                         list(self.scoreboard.values()),
-                        color=colors,
                     )
                     artists.append(container)
+
+                # Save the game history into global history.
+                self.update_global_history(
+                    round_id=round,
+                    fixture_id=fixture,
+                    player1=player1_controller.name,
+                    player2=player2_controller.name,
+                )
 
                 # Delete the player objects.
                 del player1_controller
@@ -249,7 +323,17 @@ class PrisonersDilemmaGameController:
             # Reset the scoreboard for next round.
             self.reset_scoreboard()
 
-        print("Waiting for file writer processes to join back.")
+        # Save the history into a json file.
+        print(f"Global history saved to file: ./game_data/{self.game_type}.json")
+        with open(f"./game_data/{self.game_type}.json", "w") as global_history_file:
+            json.dump(self.global_history, global_history_file)
+
+        # Analyse the global history and generate relevant insights graphs.
+        # print("Starting the analysis plotters.")
+        # self.analyse_global_history()
+
+        # Wait for analysis plotters to complete.
+        print("Waiting for analysis plotters to join back.")
         for round in process_store:
             process_store[round].join()
 
