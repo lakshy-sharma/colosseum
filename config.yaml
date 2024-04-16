@@ -2,6 +2,7 @@
 # Ignore other settings they will be ignored by game controller.
 
 prisoners_dilemma:
+  writer_parallelization: 0
   fixture_settings:
     format: roundrobin
     rounds: 4

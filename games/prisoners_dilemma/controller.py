@@ -140,7 +140,11 @@ class PrisonersDilemmaGameController:
         """
 
         # Plotting the progress of each player in a bar chart animation.
+        self.analysis_scoreboard = {}
         total_rounds = self.configurations[self.game_type]["fixture_settings"]["rounds"]
+        for player in self.configurations[self.game_type]["players"]:
+            self.analysis_scoreboard[player] = 0
+        
         process_store = {}
         for round in range(total_rounds):
             figure, ax = plt.subplots()
@@ -154,7 +158,7 @@ class PrisonersDilemmaGameController:
             # Filter all fixtures for this round. from global history.
 
             round_fixtures_list = [
-                d for d in self.global_history if d["round"] == round
+                d for d in self.global_history if d["round_id"] == round
             ]
             for fixtures_data in round_fixtures_list:
                 for move in fixtures_data["moves_data"]:
@@ -165,23 +169,33 @@ class PrisonersDilemmaGameController:
                     player1_score, player2_score = self.score_moves(
                         player1_move=player_moves[0], player2_move=player_moves[0]
                     )
+                    # Add the scores to scoreboard.
+                    self.scoreboard[players[0]] += player1_score
+                    self.scoreboard[players[1]] += player2_score
 
                     # We need to score each move in the moves data.
                     container = ax.barh(
-                        list(self.scoreboard.keys()),
-                        list(self.scoreboard.values()),
+                        list(self.analysis_scoreboard.keys()),
+                        list(self.analysis_scoreboard.values()),
                     )
                     artists.append(container)
 
             ani = aniplt.ArtistAnimation(fig=figure, artists=artists, interval=1)
-            process_store[round] = multiprocessing.Process(
-                target=self.export_graph, args=(ani, round)
-            )
-            process_store[round].start()
 
-        print("Waiting for analysis plotters to join back.")
-        for round in process_store:
-            process_store[round].join()
+            if self.configurations[f"{self.game_type}"]["writer_parallelization"] != 0:
+                process_store[round] = multiprocessing.Process(
+                    target=self.export_graph, args=(ani, round)
+                )
+                process_store[round].start()
+            else:
+                print("Waiting for analysis plotters to join back.")
+                self.export_graph(animation_data=ani, round=round)
+
+        if self.configurations[f"{self.game_type}"]["writer_parallelization"] != 0:
+            print("Waiting for analysis plotters to join back.")
+            for round in process_store:
+                process_store[round].join()
+
         return None
 
     def update_global_history(
@@ -230,19 +244,9 @@ class PrisonersDilemmaGameController:
             step=1,
         )
 
-        process_store = {}
         for round in range(
             self.configurations[self.game_type]["fixture_settings"]["rounds"]
         ):
-            # Create a new visualization for this round and start the animation.
-            fig, ax = plt.subplots()
-            fig.set_figheight(10)
-            fig.set_figwidth(15)
-            ax.set_title("Prisoners Dilemma Tournament")
-            ax.set_xlabel("Points")
-            ax.set_ylabel("Players")
-            artists = []
-
             # Start the fixtures for this round.
             for fixture in fixtures:
                 print(
@@ -291,13 +295,6 @@ class PrisonersDilemmaGameController:
                         }
                     )
 
-                    # Plot the scores on the map.
-                    container = ax.barh(
-                        list(self.scoreboard.keys()),
-                        list(self.scoreboard.values()),
-                    )
-                    artists.append(container)
-
                 # Save the game history into global history.
                 self.update_global_history(
                     round_id=round,
@@ -312,14 +309,6 @@ class PrisonersDilemmaGameController:
                 # Delete the game history.
                 self.flush_game_history()
 
-            # Save the plot for this round in a file.
-            # This must start as a new process and final program should wait until it quits.
-            ani = aniplt.ArtistAnimation(fig=fig, artists=artists, interval=1)
-            process_store[round] = multiprocessing.Process(
-                target=self.export_graph, args=(ani, round)
-            )
-            process_store[round].start()
-
             # Reset the scoreboard for next round.
             self.reset_scoreboard()
 
@@ -329,12 +318,7 @@ class PrisonersDilemmaGameController:
             json.dump(self.global_history, global_history_file)
 
         # Analyse the global history and generate relevant insights graphs.
-        # print("Starting the analysis plotters.")
-        # self.analyse_global_history()
-
-        # Wait for analysis plotters to complete.
-        print("Waiting for analysis plotters to join back.")
-        for round in process_store:
-            process_store[round].join()
+        print("Starting the analysis plotters.")
+        self.analyse_global_history()
 
         return None
