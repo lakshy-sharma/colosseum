@@ -179,16 +179,19 @@ class PrisonersDilemmaGameController:
                         list(self.analysis_scoreboard.values()),
                     )
                     artists.append(container)
+                    del container
+                    del players
+                    del player_moves
 
+            del round_fixtures_list
             ani = aniplt.ArtistAnimation(fig=figure, artists=artists, interval=1)
-
             if self.configurations[f"{self.game_type}"]["writer_parallelization"] != 0:
                 process_store[round] = multiprocessing.Process(
                     target=self.export_graph, args=(ani, round)
                 )
                 process_store[round].start()
             else:
-                print("Waiting for analysis plotters to join back.")
+                print(f"Starting the analysis plotters for the round: {round}")
                 self.export_graph(animation_data=ani, round=round)
 
         if self.configurations[f"{self.game_type}"]["writer_parallelization"] != 0:
@@ -278,7 +281,7 @@ class PrisonersDilemmaGameController:
                     player1_move = player1_controller.make_move()
                     player2_move = player2_controller.make_move()
 
-                    # Award points based on moves.
+                    # Award points to players based on moves.
                     player1_score, player2_score = self.score_moves(
                         player1_move, player2_move
                     )
@@ -287,7 +290,7 @@ class PrisonersDilemmaGameController:
                     self.scoreboard[player1_controller.name] += player1_score
                     self.scoreboard[player2_controller.name] += player2_score
 
-                    # Append the moves into history.
+                    # Append the moves into history of this game.
                     self.game_history.append(
                         {
                             player1_controller.name: player1_move,
