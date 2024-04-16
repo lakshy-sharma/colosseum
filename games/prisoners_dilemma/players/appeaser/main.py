@@ -3,7 +3,7 @@ import nashpy
 
 class PlayerController:
     """
-    Appeaser: A player who tries to guess what opponent wants and changes strategy accordingly.
+    Appeaser: A player who tries to guess what the opponent wants and changes strategy accordingly. 
     """
 
     def __init__(

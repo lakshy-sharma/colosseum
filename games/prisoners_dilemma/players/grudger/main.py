@@ -17,7 +17,7 @@ class PlayerController:
         self.game_history = game_history
         self.global_history = global_history
         self.scoreboard = scoreboard
-        self.grudge_list = []  # Start without a grudge.
+        self.grudged = False # Start without a grudge
 
     def make_move(self) -> str:
         # Start with cooperation.
@@ -26,13 +26,10 @@ class PlayerController:
 
         if (
             self.game_history[-1][self.opponent] == "cooperate"
-            and self.opponent not in self.grudge_list
+            and self.grudged != False
         ):
             return "cooperate"
         else:
             # Mark this player as a defector and hold a grudge.
-            self.grudge_list.append(self.opponent)
-            self.grudged = list(
-                set(self.grudge_list)
-            )  # Reduce the list to unique values
+            self.grudged = True
             return "defect"

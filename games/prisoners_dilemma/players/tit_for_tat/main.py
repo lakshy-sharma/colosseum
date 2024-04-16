@@ -19,11 +19,10 @@ class PlayerController:
         self.scoreboard = scoreboard
 
     def make_move(self) -> str:
+
         # If we are at first chance then always cooperate.
+        # Else perform the same move that the opponent did in previous move.
         if len(self.game_history) == 0:
             return "cooperate"
-
-        if self.game_history[-1][self.opponent] == "cooperate":
-            return "cooperate"
         else:
-            return "defect"
+            return self.game_history[-1][self.opponent]

@@ -1,11 +1,7 @@
 import importlib
-import matplotlib.pyplot as plt
-import matplotlib.animation as aniplt
 import random
 import json
-import multiprocessing
 from .utils.fixtures_generators import roundrobin
-
 
 class PrisonersDilemmaGameController:
     """
@@ -110,96 +106,6 @@ class PrisonersDilemmaGameController:
                 f"Invalid move by the players: Player1: {player1_move}, Player2: {player2_move}. Please fix this."
             )
             exit(0)
-
-    def export_graph(self, animation_data: aniplt.ArtistAnimation, round: int) -> None:
-        """
-        This function saves the data into a file by using the ffmpeg library.
-        It has been seperated from complete program so that we can call it using the process library and make the operation fast.
-
-        Args:
-            animation_data (ArtistAnimation): A matplotlib based artist animation.
-            round (int): An integer value depicting the current round for which we are saving the data.
-
-        Returns:
-            None (The operation writes data into a file.)
-        """
-        animation_data.save(
-            f"./visuals/{self.game_type}/round{round}.mp4",
-            writer=aniplt.FFMpegWriter(fps=25),
-        )
-
-    def analyse_global_history(self) -> None:
-        """
-        This function analyzes the global history and generates pre-programmed graphical insights.
-        The function is isolated to ensure maximal parallelization and isolation from rest of program.
-
-        Args:
-            None
-        Returns:
-            None
-        """
-
-        # Plotting the progress of each player in a bar chart animation.
-        self.analysis_scoreboard = {}
-        total_rounds = self.configurations[self.game_type]["fixture_settings"]["rounds"]
-        for player in self.configurations[self.game_type]["players"]:
-            self.analysis_scoreboard[player] = 0
-        
-        process_store = {}
-        for round in range(total_rounds):
-            figure, ax = plt.subplots()
-            figure.set_figheight(10)
-            figure.set_figwidth(15)
-            ax.set_title(f"Round: {round}")
-            ax.set_xlabel("Points")
-            ax.set_ylabel("Players")
-            artists = []
-
-            # Filter all fixtures for this round. from global history.
-
-            round_fixtures_list = [
-                d for d in self.global_history if d["round_id"] == round
-            ]
-            for fixtures_data in round_fixtures_list:
-                for move in fixtures_data["moves_data"]:
-                    players = list(move.keys())
-                    player_moves = list(move.values())
-
-                    # Get the scores for the above players.
-                    player1_score, player2_score = self.score_moves(
-                        player1_move=player_moves[0], player2_move=player_moves[0]
-                    )
-                    # Add the scores to scoreboard.
-                    self.scoreboard[players[0]] += player1_score
-                    self.scoreboard[players[1]] += player2_score
-
-                    # We need to score each move in the moves data.
-                    container = ax.barh(
-                        list(self.analysis_scoreboard.keys()),
-                        list(self.analysis_scoreboard.values()),
-                    )
-                    artists.append(container)
-                    del container
-                    del players
-                    del player_moves
-
-            del round_fixtures_list
-            ani = aniplt.ArtistAnimation(fig=figure, artists=artists, interval=1)
-            if self.configurations[f"{self.game_type}"]["writer_parallelization"] != 0:
-                process_store[round] = multiprocessing.Process(
-                    target=self.export_graph, args=(ani, round)
-                )
-                process_store[round].start()
-            else:
-                print(f"Starting the analysis plotters for the round: {round}")
-                self.export_graph(animation_data=ani, round=round)
-
-        if self.configurations[f"{self.game_type}"]["writer_parallelization"] != 0:
-            print("Waiting for analysis plotters to join back.")
-            for round in process_store:
-                process_store[round].join()
-
-        return None
 
     def update_global_history(
         self, round_id: int, fixture_id: int, player1: str, player2: str
@@ -316,12 +222,8 @@ class PrisonersDilemmaGameController:
             self.reset_scoreboard()
 
         # Save the history into a json file.
-        print(f"Global history saved to file: ./game_data/{self.game_type}.json")
-        with open(f"./game_data/{self.game_type}.json", "w") as global_history_file:
+        print(f"Game data has been stored in in the database: ./game_data/database/{self.game_type}.json")
+        with open(f"./game_data/database/{self.game_type}.json", "w") as global_history_file:
             json.dump(self.global_history, global_history_file)
-
-        # Analyse the global history and generate relevant insights graphs.
-        print("Starting the analysis plotters.")
-        self.analyse_global_history()
 
         return None
