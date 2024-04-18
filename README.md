@@ -6,10 +6,12 @@ A playground for game theory based games.
 
 To start playing the game you must perform the following steps.
 
-1. sudo apt install ffmpeg virtualenv
-2. virtualenv isolation
-3. source isolation/bin/activate
-4. pip3 install -r requirements.txt
+```
+sudo apt install ffmpeg virtualenv
+virtualenv isolation
+source isolation/bin/activate
+pip3 install -r requirements.txt
+```
 
 ## Games
 ### Prisoners Dilemma
