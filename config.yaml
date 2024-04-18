@@ -5,9 +5,9 @@ prisoners_dilemma:
   writer_parallelization: 0
   fixture_settings:
     format: roundrobin
-    rounds: 4
-    min_iterations: 200
-    max_iterations: 500
+    rounds: 5
+    min_iterations: 180
+    max_iterations: 220
   payoff_matrix: 
     win: 3
     mutual_cooperation: 2
