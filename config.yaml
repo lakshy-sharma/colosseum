@@ -1,6 +1,7 @@
 # Set the settings for the competition you want to play.
 # Ignore other settings they will be ignored by game controller.
 
+# Settings to be used for prisoners_dilemma game.
 prisoners_dilemma:
   fixture_settings:
     format: roundrobin
@@ -22,3 +23,12 @@ prisoners_dilemma:
     - grudger
     - better_and_better
     - worse_and_worse
+
+# Settings to be used for sokoban solver game.
+sokoban_solver:
+  methods:
+    - DFS
+    - BFS
+    - Astar
+  output_dir: ./results
+  levels_file: ./levels.json

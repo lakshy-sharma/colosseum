@@ -124,7 +124,7 @@ class PrisonersDilemmaGameController:
             None (The operation writes data into a file.)
         """
         animation_data.save(
-            f"./visuals/{self.game_type}/round{round}.mp4",
+            f"./outputs/visuals/{self.game_type}/round{round}.mp4",
             writer=aniplt.FFMpegWriter(fps=25),
         )
 
@@ -325,7 +325,7 @@ class PrisonersDilemmaGameController:
 
         # Save the history into a json file.
         print(f"Global history saved to file: ./game_data/{self.game_type}.json")
-        with open(f"./game_data/{self.game_type}.json", "w") as global_history_file:
+        with open(f"./outputs/game_results/{self.game_type}.json", "w") as global_history_file:
             json.dump(self.global_history, global_history_file)
 
         # Analyse the global history and generate relevant insights graphs.
