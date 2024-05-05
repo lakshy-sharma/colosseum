@@ -1,11 +1,7 @@
 import importlib
-import matplotlib.pyplot as plt
-import matplotlib.animation as aniplt
 import random
 import json
-import multiprocessing
 from .utils.fixtures_generators import roundrobin
-
 
 class PrisonersDilemmaGameController:
     """
@@ -111,6 +107,7 @@ class PrisonersDilemmaGameController:
             )
             exit(0)
 
+<<<<<<< HEAD
     def export_graph(self, animation_data: aniplt.ArtistAnimation, round: int) -> None:
         """
         This function saves the data into a file by using the ffmpeg library.
@@ -184,6 +181,8 @@ class PrisonersDilemmaGameController:
             process_store[round].join()
         return None
 
+=======
+>>>>>>> fc8265ae6f468287e3f716293429c318e498cec7
     def update_global_history(
         self, round_id: int, fixture_id: int, player1: str, player2: str
     ) -> None:
@@ -230,19 +229,9 @@ class PrisonersDilemmaGameController:
             step=1,
         )
 
-        process_store = {}
         for round in range(
             self.configurations[self.game_type]["fixture_settings"]["rounds"]
         ):
-            # Create a new visualization for this round and start the animation.
-            fig, ax = plt.subplots()
-            fig.set_figheight(10)
-            fig.set_figwidth(15)
-            ax.set_title("Prisoners Dilemma Tournament")
-            ax.set_xlabel("Points")
-            ax.set_ylabel("Players")
-            artists = []
-
             # Start the fixtures for this round.
             for fixture in fixtures:
                 print(
@@ -274,7 +263,7 @@ class PrisonersDilemmaGameController:
                     player1_move = player1_controller.make_move()
                     player2_move = player2_controller.make_move()
 
-                    # Award points based on moves.
+                    # Award points to players based on moves.
                     player1_score, player2_score = self.score_moves(
                         player1_move, player2_move
                     )
@@ -283,20 +272,13 @@ class PrisonersDilemmaGameController:
                     self.scoreboard[player1_controller.name] += player1_score
                     self.scoreboard[player2_controller.name] += player2_score
 
-                    # Append the moves into history.
+                    # Append the moves into history of this game.
                     self.game_history.append(
                         {
                             player1_controller.name: player1_move,
                             player2_controller.name: player2_move,
                         }
                     )
-
-                    # Plot the scores on the map.
-                    container = ax.barh(
-                        list(self.scoreboard.keys()),
-                        list(self.scoreboard.values()),
-                    )
-                    artists.append(container)
 
                 # Save the game history into global history.
                 self.update_global_history(
@@ -312,29 +294,17 @@ class PrisonersDilemmaGameController:
                 # Delete the game history.
                 self.flush_game_history()
 
-            # Save the plot for this round in a file.
-            # This must start as a new process and final program should wait until it quits.
-            ani = aniplt.ArtistAnimation(fig=fig, artists=artists, interval=1)
-            process_store[round] = multiprocessing.Process(
-                target=self.export_graph, args=(ani, round)
-            )
-            process_store[round].start()
-
             # Reset the scoreboard for next round.
             self.reset_scoreboard()
 
         # Save the history into a json file.
+<<<<<<< HEAD
         print(f"Global history saved to file: ./game_data/{self.game_type}.json")
         with open(f"./outputs/game_results/{self.game_type}.json", "w") as global_history_file:
+=======
+        print(f"Game data has been stored in in the database: ./game_data/database/{self.game_type}.json")
+        with open(f"./game_data/database/{self.game_type}.json", "w") as global_history_file:
+>>>>>>> fc8265ae6f468287e3f716293429c318e498cec7
             json.dump(self.global_history, global_history_file)
-
-        # Analyse the global history and generate relevant insights graphs.
-        # print("Starting the analysis plotters.")
-        # self.analyse_global_history()
-
-        # Wait for analysis plotters to complete.
-        print("Waiting for analysis plotters to join back.")
-        for round in process_store:
-            process_store[round].join()
 
         return None
