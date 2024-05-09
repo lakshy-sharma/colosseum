@@ -1,31 +1,12 @@
+# License: GNU GPLv3
+# Author: Lakshy Sharma
+# Description: This is the main controller file for the colosseum engine. It will be used for running all my AI models and mathematical research projects.
+# Language: Python
+
 import sys
 import yaml
-from colosseum.games.sokoban_solver.controller import SokobanSolver
-from games import PrisonersDilemmaGameController
-
-
-class ColosseumController:
-
-    def __init__(self, game_type: str, configurations: dict) -> None:
-        self.game_type = game_type
-        self.configurations = configurations
-
-    def start(self) -> None:
-        """
-        This function starts the game and passes the results to a function which can buffer the results as required.
-        """
-        if self.game_type == "prisoners_dilemma":
-            # Start the game with the players.
-            game_controller = PrisonersDilemmaGameController(configurations=self.configurations)
-            game_controller.start()
-        elif self.game_type == "sokoban_solver":
-            sokoban_solver = SokobanSolver(configurations=self.configurations, enable_threading=False)
-            pass
-        else:
-            print("This Game is not Supported Currently.")
-
-        return None
-
+import os
+import importlib
 
 def read_configurations(config_path: str) -> dict:
     """
@@ -35,7 +16,7 @@ def read_configurations(config_path: str) -> dict:
         config_file (str): The main configurations file.
 
     Returns:
-        dict: Returns a dictionary containing the confiugrations.
+        dict: Returns a dictionary containing the configurations.
     """
     with open(config_path, "r") as config_file:
         configurations = yaml.load(config_file, Loader=yaml.SafeLoader)
@@ -45,14 +26,27 @@ def read_configurations(config_path: str) -> dict:
 
 def main() -> None:
     """
-    Entrypoint for the complete program.
+    This function loads the research modules and starts them as requested by the user.
+    We make use of importlib module to create a plugin architecture.
+
+    Args:
+        None
+    
+    Returns:
+        None
     """
-    game_type = sys.argv[1]
-    configurations = read_configurations(config_path="config.yaml")
-    game_controller = ColosseumController(
-        game_type=game_type, configurations=configurations
-    )
-    game_controller.start()
+    research_module_name = sys.argv[1]
+    loaded_configs = read_configurations(config_path="config.yaml")
+    loaded_modules = os.listdir("./modules")
+
+    # Initialize the required research module.
+    if research_module_name in loaded_modules:
+        research_module = importlib.import_module(f".modules.{research_module_name}", package=".")
+    else:
+        print("Research Module not Found. Please place your code in modules folder.")
+
+    research_module.ResearchController(configurations=loaded_configs)
+    research_module.start()
 
 
 if __name__ == "__main__":

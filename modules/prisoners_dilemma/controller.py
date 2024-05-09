@@ -3,7 +3,7 @@ import random
 import json
 from .utils.fixtures_generators import roundrobin
 
-class PrisonersDilemmaGameController:
+class ResearchController:
     """
     This game controller is used for controlling the game.
     Currently the implementation is single threaded but the plan is to convert it into a multithreaded where each round is run inside its own thread.
