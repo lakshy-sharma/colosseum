@@ -24,7 +24,6 @@ prisoners_dilemma:
     - grudger
     - better_and_better
     - worse_and_worse
-<<<<<<< HEAD
 
 # Settings to be used for sokoban solver game.
 sokoban_solver:
@@ -34,5 +33,3 @@ sokoban_solver:
     - Astar
   output_dir: ./results
   levels_file: ./levels.json
-=======
->>>>>>> fc8265ae6f468287e3f716293429c318e498cec7

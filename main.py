@@ -1,5 +1,6 @@
 import sys
 import yaml
+from colosseum.games.sokoban_solver.controller import SokobanSolver
 from games import PrisonersDilemmaGameController
 
 
@@ -15,12 +16,13 @@ class ColosseumController:
         """
         if self.game_type == "prisoners_dilemma":
             # Start the game with the players.
-            game_controller = PrisonersDilemmaGameController(
-                configurations=self.configurations
-            )
+            game_controller = PrisonersDilemmaGameController(configurations=self.configurations)
             game_controller.start()
+        elif self.game_type == "sokoban_solver":
+            sokoban_solver = SokobanSolver(configurations=self.configurations, enable_threading=False)
+            pass
         else:
-            print("Game not supported.")
+            print("This Game is not Supported Currently.")
 
         return None
 

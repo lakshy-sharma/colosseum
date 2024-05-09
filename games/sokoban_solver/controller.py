@@ -6,9 +6,12 @@ class SokobanSolver():
     The class has been provided to help parallelize the code with multiprocessing module in future.
     You can enable internal parallelization by using the enable_threading parameter.
     """
-    def __init__(self, configuration: dict, level_data: dict, enable_threading: bool = False) -> None:
+    def __init__(self, configuration: dict, enable_threading: bool = False) -> None:
         self.configuration = configuration
-        self.level_data = level_data
+        self.levels_file = self.configuration["sokoban_solver"]["levels_file"]
+        with open(self.levels_file, "r") as levels_file:
+            self.level_data = json.loads(levels_file.read())
+
         self.game_matrix = self.level_data["game_matrix"]
         self.metadata = self.level_data["metadata"]
         return None
@@ -56,7 +59,7 @@ def load_json(path: str) -> dict:
     except:
         return {}
 
-def main() -> None:
+def start() -> None:
     """
     The main entrypoint for the program.
     """
@@ -67,10 +70,7 @@ def main() -> None:
     
     # Create a solver for each level and start solving with the provided configuration.
     for level in levels_data.keys():
-        solver = SokobanSolver(configuration=configuration, level_data=levels_data[level])
+        solver = SokobanSolver(configuration=configuration)
         solver.solve()
 
     return None
-
-if __name__ == "__main__":
-    main()
