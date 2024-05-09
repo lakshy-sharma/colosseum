@@ -52,9 +52,7 @@ class PrisonersDilemmaGameController:
         # Initiate the modules for each player.
         player_modules = {}
         for player in self.configurations[self.game_type]["players"]:
-            player_modules[player] = importlib.import_module(
-                f".players.{player}", package=f"games.{self.game_type}"
-            )
+            player_modules[player] = importlib.import_module(f".players.{player}", package=f"games.{self.game_type}")
 
         return player_modules
 
@@ -107,85 +105,7 @@ class PrisonersDilemmaGameController:
             )
             exit(0)
 
-<<<<<<< HEAD
-    def export_graph(self, animation_data: aniplt.ArtistAnimation, round: int) -> None:
-        """
-        This function saves the data into a file by using the ffmpeg library.
-        It has been seperated from complete program so that we can call it using the process library and make the operation fast.
-
-        Args:
-            animation_data (ArtistAnimation): A matplotlib based artist animation.
-            round (int): An integer value depicting the current round for which we are saving the data.
-
-        Returns:
-            None (The operation writes data into a file.)
-        """
-        animation_data.save(
-            f"./outputs/visuals/{self.game_type}/round{round}.mp4",
-            writer=aniplt.FFMpegWriter(fps=25),
-        )
-
-    def analyse_global_history(self) -> None:
-        """
-        This function analyzes the global history and generates pre-programmed graphical insights.
-        The function is isolated to ensure maximal parallelization and isolation from rest of program.
-
-        Args:
-            None
-        Returns:
-            None
-        """
-
-        # Plotting the progress of each player in a bar chart animation.
-        total_rounds = self.configurations[self.game_type]["fixture_settings"]["rounds"]
-        process_store = {}
-        for round in range(total_rounds):
-            figure, ax = plt.subplots()
-            figure.set_figheight(10)
-            figure.set_figwidth(15)
-            ax.set_title(f"Round: {round}")
-            ax.set_xlabel("Points")
-            ax.set_ylabel("Players")
-            artists = []
-
-            # Filter all fixtures for this round. from global history.
-
-            round_fixtures_list = [
-                d for d in self.global_history if d["round"] == round
-            ]
-            for fixtures_data in round_fixtures_list:
-                for move in fixtures_data["moves_data"]:
-                    players = list(move.keys())
-                    player_moves = list(move.values())
-
-                    # Get the scores for the above players.
-                    player1_score, player2_score = self.score_moves(
-                        player1_move=player_moves[0], player2_move=player_moves[0]
-                    )
-
-                    # We need to score each move in the moves data.
-                    container = ax.barh(
-                        list(self.scoreboard.keys()),
-                        list(self.scoreboard.values()),
-                    )
-                    artists.append(container)
-
-            ani = aniplt.ArtistAnimation(fig=figure, artists=artists, interval=1)
-            process_store[round] = multiprocessing.Process(
-                target=self.export_graph, args=(ani, round)
-            )
-            process_store[round].start()
-
-        print("Waiting for analysis plotters to join back.")
-        for round in process_store:
-            process_store[round].join()
-        return None
-
-=======
->>>>>>> fc8265ae6f468287e3f716293429c318e498cec7
-    def update_global_history(
-        self, round_id: int, fixture_id: int, player1: str, player2: str
-    ) -> None:
+    def update_global_history(self, round_id: int, fixture_id: int, player1: str, player2: str) -> None:
         """
         Updates the global history with game history.
 
@@ -220,37 +140,25 @@ class PrisonersDilemmaGameController:
         player_modules = self.register_player_modules()
         fixtures = self.generate_fixtures()
         game_iterations = random.randrange(
-            start=self.configurations[self.game_type]["fixture_settings"][
-                "min_iterations"
-            ],
-            stop=self.configurations[self.game_type]["fixture_settings"][
-                "max_iterations"
-            ],
+            start=self.configurations[self.game_type]["fixture_settings"]["min_iterations"],
+            stop=self.configurations[self.game_type]["fixture_settings"]["max_iterations"],
             step=1,
         )
 
-        for round in range(
-            self.configurations[self.game_type]["fixture_settings"]["rounds"]
-        ):
+        for round in range(self.configurations[self.game_type]["fixture_settings"]["rounds"]):
             # Start the fixtures for this round.
             for fixture in fixtures:
-                print(
-                    f"Round Id: {round}, Fixture Id: {fixture}, Players: {fixtures[fixture]}, Iterations: {game_iterations}"
-                )
+                print(f"Round Id: {round}, Fixture Id: {fixture}, Players: {fixtures[fixture]}, Iterations: {game_iterations}")
 
                 # Setup the players for this fixture.
-                player1_controller = player_modules[
-                    fixtures[fixture][0]
-                ].PlayerController(
+                player1_controller = player_modules[fixtures[fixture][0]].PlayerController(
                     opponent_name=fixtures[fixture][1],
                     payoff_matrix=self.payoff_matrix,
                     game_history=self.game_history,
                     global_history=self.global_history,
                     scoreboard=self.scoreboard,
                 )
-                player2_controller = player_modules[
-                    fixtures[fixture][1]
-                ].PlayerController(
+                player2_controller = player_modules[fixtures[fixture][1]].PlayerController(
                     opponent_name=fixtures[fixture][0],
                     payoff_matrix=self.payoff_matrix,
                     game_history=self.game_history,
@@ -264,9 +172,7 @@ class PrisonersDilemmaGameController:
                     player2_move = player2_controller.make_move()
 
                     # Award points to players based on moves.
-                    player1_score, player2_score = self.score_moves(
-                        player1_move, player2_move
-                    )
+                    player1_score, player2_score = self.score_moves(player1_move, player2_move)
 
                     # Update the scoreboard with new scores.
                     self.scoreboard[player1_controller.name] += player1_score
@@ -298,13 +204,8 @@ class PrisonersDilemmaGameController:
             self.reset_scoreboard()
 
         # Save the history into a json file.
-<<<<<<< HEAD
-        print(f"Global history saved to file: ./game_data/{self.game_type}.json")
-        with open(f"./outputs/game_results/{self.game_type}.json", "w") as global_history_file:
-=======
         print(f"Game data has been stored in in the database: ./game_data/database/{self.game_type}.json")
         with open(f"./game_data/database/{self.game_type}.json", "w") as global_history_file:
->>>>>>> fc8265ae6f468287e3f716293429c318e498cec7
             json.dump(self.global_history, global_history_file)
 
         return None
