@@ -1,2 +1,2 @@
-from .prisoners_dilemma.controller import PrisonersDilemmaGameController
-from .sokoban_solver.controller import SokobanSolver
+from .prisoners_dilemma.main import ResearchController
+from .sokoban_solver.main import ResearchController

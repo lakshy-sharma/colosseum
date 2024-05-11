@@ -1,1 +1,1 @@
-from .controller import PrisonersDilemmaGameController
+from .main import ResearchController

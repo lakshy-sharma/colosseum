@@ -1,9 +1,29 @@
 # Colosseum
 
-A playground for game theory based games.
+The colosseum project is a place where I try to automate my research code base and create a plugin based ecosystem to run research pipelines.
 
-## Setup
+The code has been designed to integrate with other research 0projects provided they follow a basic naming convention.
 
+The architecture is simple with the following folder.
+
+1. modules
+2. views
+3. inputs
+4. outputs: When in offline mode all the 
+5. server: Once a module is ready to be published you can quickly create a fastapi based server to serve your modules.
+
+## Current Initiatives
+
+Currently I am working on two research problems.
+
+1. Prisoners Dilemma Based Game Theory research.
+2. Sokoban solver.
+
+### Prisoners Dilemma
+
+This is a simulator + analyser for the classic game of prisoners dilemma in game theory.
+
+#### Setup
 To start playing the game you must perform the following steps.
 
 ```
@@ -12,11 +32,6 @@ virtualenv isolation
 source isolation/bin/activate
 pip3 install -r requirements.txt
 ```
-
-## Games
-### Prisoners Dilemma
-
-The classic game of prisoners dilemma.
 
 #### Registered Players
 1. Jesus: A player who never retaliates
@@ -27,3 +42,8 @@ The classic game of prisoners dilemma.
 6. Worse and Worse: A player who defects more as the game proceeds. Essentially drawing out the worst in its opponents as the game proceeds.
 7. Better and Better: A player who cooperates mre as the game goes on. Essentially bringing out the bestv in their opponents as the game proceeds.
 8. Grudger: A player who holds grudges and stops cooperating once an opponent defects.
+
+### Sokoban Solver
+
+This is a solevr for sokoban puzzles.
+It is an initiative to further the research in artificial intelligence to plan future moves with heuristics without bruteforcing.
