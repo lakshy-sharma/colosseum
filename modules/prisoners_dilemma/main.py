@@ -54,7 +54,7 @@ class ResearchController:
         # Initiate the modules for each player.
         player_modules = {}
         for player in self.configurations[self.game_type]["players"]:
-            player_modules[player] = importlib.import_module(f".players.{player}", package=f"games.{self.game_type}")
+            player_modules[player] = importlib.import_module(f".players.{player}", package=f"modules.{self.game_type}")
 
         return player_modules
 
@@ -133,7 +133,6 @@ class ResearchController:
 
     def start(self) -> None:
         """
-
         The steps performed by this function are.
         1. Load the player modules.
         2. Generate fixtures for all games.

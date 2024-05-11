@@ -41,12 +41,12 @@ def main() -> None:
 
     # Initialize the required research module.
     if research_module_name in loaded_modules:
-        research_module = importlib.import_module(f".modules.{research_module_name}", package=".")
+        research_module = importlib.import_module(f"modules.{research_module_name}", package=".")
     else:
         print("Research Module not Found. Please place your code in modules folder.")
 
-    research_module.ResearchController(configurations=loaded_configs)
-    research_module.start()
+    research_controller = research_module.ResearchController(configurations=loaded_configs)
+    research_controller.start()
 
 
 if __name__ == "__main__":
