@@ -1,4 +1,4 @@
-# Colosseum
+# Aristotle
 
 The colosseum project is a place where I try to automate my research code base and create a plugin based ecosystem to run research pipelines.
 
